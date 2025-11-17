@@ -23,9 +23,12 @@ RUN curl -fsSL https://ollama.com/install.sh | sh
 # working dir; code will be bind-mounted here by compose
 WORKDIR /app
 
+COPY requirements.txt /app/requirements.txt
+RUN python3 -m pip install --no-cache-dir --break-system-packages -r /app/requirements.txt
+
 # expose FastAPI and Ollama
 EXPOSE 8000 11434
 
-# use tini for clean signals; entrypoint does uv venv + pip install + serve
+# use tini for clean signals; entrypoint will just start ollama + uvicorn
 ENTRYPOINT ["/usr/bin/tini", "--"]
 CMD ["/app/entrypoint.sh"]
