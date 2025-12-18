@@ -5,3 +5,7 @@ langgraph
 langchain-core
 langchain-ollama
 pydantic
+pydantic-settings
+httpx
+pytest
+pytest-asyncio

@@ -1,40 +1,47 @@
-version: "3.9"
-
 services:
   llm:
-    build: ./services/llm
+    image: ollama/ollama:0.3.11
     container_name: mcp-llm
     restart: unless-stopped
     ports:
-      - "11434:11434"        # expose for debugging; optional in prod
+      - "11434:11434"
     environment:
       - OLLAMA_HOST=0.0.0.0
+      - OLLAMA_KEEP_ALIVE=-1              # never unload once loaded
     volumes:
       - ollama_models:/root/.ollama
-    # GPU config: adjust for your setup
-    # If you have NVIDIA + nvidia-container-toolkit:
-    # gpus: all
+    gpus: all
 
   app:
-    build: ./services/app
+    build: ./app
     container_name: mcp-app
     restart: unless-stopped
     depends_on:
       - llm
     env_file:
       - .env                 # you'll create this from .env.example
+    environment:
+      - PYTHONDONTWRITEBYTECODE=1
     ports:
       - "8000:8000"
     volumes:
-      - ./services/app:/app  # dev convenience: edit code without rebuild
+      - ./app:/app  # dev convenience: edit code without rebuild
 
-  # web:
-  #   build: ./services/web
-  #   container_name: mcp-web
-  #   depends_on:
-  #     - app
-  #   ports:
-  #     - "3000:3000"
+  web:
+    build: ./web
+    container_name: mcp-web
+    depends_on:
+      - app
+    env_file:
+      - .env
+    environment:
+      - API_URL=http://app:8000
+    ports:
+      - "3000:3000"
+    volumes:
+      - ./web:/app
+    command: npm run dev
+
 
 volumes:
   ollama_models:
